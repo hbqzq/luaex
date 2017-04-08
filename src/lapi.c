@@ -420,6 +420,16 @@ LUA_API void *lua_touserdata (lua_State *L, int idx) {
 }
 
 
+LUA_API void *lua_tolightuserdata(lua_State *L, int idx, int* variant) {
+  StkId o = index2addr(L, idx);
+  if (ttnov(o) == LUA_TLIGHTUSERDATA) {
+    *variant = ttvariant(o) >> 4;
+    return pvalue(o);
+  }
+  return NULL;
+}
+
+
 LUA_API lua_State *lua_tothread (lua_State *L, int idx) {
   StkId o = index2addr(L, idx);
   return (!ttisthread(o)) ? NULL : thvalue(o);
@@ -569,6 +579,17 @@ LUA_API void lua_pushlightuserdata (lua_State *L, void *p) {
 }
 
 
+LUA_API void lua_pushlightuserdata_variant(lua_State *L, void *p, int variant) {
+	variant &= 3;
+	variant <<= 4;
+
+	lua_lock(L);
+	setvpvalue(L->top, p, variant);
+	api_incr_top(L);
+	lua_unlock(L);
+}
+
+
 LUA_API int lua_pushthread (lua_State *L) {
   lua_lock(L);
   setthvalue(L, L->top, L);
@@ -706,6 +727,9 @@ LUA_API int lua_getmetatable (lua_State *L, int objindex) {
     case LUA_TUSERDATA:
       mt = uvalue(obj)->metatable;
       break;
+	case LUA_TLIGHTUSERDATA: 
+	  mt = G(L)->lmt[ttvariant(obj) >> 4];
+	  break;
     default:
       mt = G(L)->mt[ttnov(obj)];
       break;
@@ -871,6 +895,14 @@ LUA_API int lua_setmetatable (lua_State *L, int objindex) {
       }
       break;
     }
+	case LUA_TLIGHTUSERDATA: {
+	  int variant = ttvariant(obj) >> 4;
+	  G(L)->lmt[variant] = mt;
+	  if (mt) {
+        luaC_objbarrier(L, uvalue(obj), mt);
+        luaC_checkfinalizer(L, gcvalue(obj), mt);
+	  }
+	}
     default: {
       G(L)->mt[ttnov(obj)] = mt;
       break;

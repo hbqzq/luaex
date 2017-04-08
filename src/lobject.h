@@ -135,6 +135,9 @@ typedef struct lua_TValue {
 /* type tag of a TValue with no variants (bits 0-3) */
 #define ttnov(o)	(novariant(rttype(o)))
 
+/* type variant of a TValue */
+#define ttvariant(o) (rttype(o) & 0x30)
+
 
 /* Macros to test type */
 #define checktag(o,t)		(rttype(o) == (t))
@@ -214,6 +217,9 @@ typedef struct lua_TValue {
 
 #define setpvalue(obj,x) \
   { TValue *io=(obj); val_(io).p=(x); settt_(io, LUA_TLIGHTUSERDATA); }
+
+#define setvpvalue(obj,x,variant) \
+  { TValue *io=(obj); val_(io).p=(x); settt_(io, LUA_TLIGHTUSERDATA | variant); }
 
 #define setbvalue(obj,x) \
   { TValue *io=(obj); val_(io).b=(x); settt_(io, LUA_TBOOLEAN); }
