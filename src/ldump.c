@@ -80,7 +80,8 @@ static void DumpString (const TString *s, DumpState *D) {
       DumpByte(cast_int(size), D);
     else {
       DumpByte(0xFF, D);
-      DumpVar(size, D);
+      //DumpVar(size, D);
+      DumpInt(cast_int(size), D);
     }
     DumpVector(str, size - 1, D);  /* no need to save '\0' */
   }
@@ -187,7 +188,7 @@ static void DumpHeader (DumpState *D) {
   DumpByte(LUAC_FORMAT, D);
   DumpLiteral(LUAC_DATA, D);
   DumpByte(sizeof(int), D);
-  DumpByte(sizeof(size_t), D);
+  //DumpByte(sizeof(size_t), D);
   DumpByte(sizeof(Instruction), D);
   DumpByte(sizeof(lua_Integer), D);
   DumpByte(sizeof(lua_Number), D);
