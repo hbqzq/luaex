@@ -33,6 +33,10 @@
 #include "lvm.h"
 #include "lzio.h"
 
+#ifdef LUA_TYPECHECK
+#include "lauxlib.h"
+#include "ltype.h"
+#endif
 
 
 #define errorstatus(s)	((s) > LUA_YIELD)
@@ -450,6 +454,21 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
           setnilvalue(L->top++);  /* complete missing arguments */
         base = func + 1;
       }
+#ifdef LUA_TYPECHECK
+	  if (!p->is_vararg && p->tc && p->sizetc > 0) {
+		  int nargs = cast_int(L->top - base - 1);
+		  for (int i = 0; i < p->numparams; i++) {
+			  int argidx = i - nargs - 1;
+			  int argTypeId = luaT_getTypeId(L, argidx);
+			  if (p->tc[i + 1] <= 0) continue;
+			  if (!luaT_matchType(L, p->tc[i + 1], argTypeId)) {
+				  const char* got = luaT_getTypename(L, argTypeId);
+				  const char* expected = luaT_getTypename(L, p->tc[i + 1]);
+				  luaL_error(L, "invalid type of param[%d], <%s> expected, got <%s>", i, expected, got);
+			  }
+		  }
+	  }
+#endif
       ci = next_ci(L);  /* now 'enter' new function */
       ci->nresults = nresults;
       ci->func = func;

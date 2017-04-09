@@ -33,11 +33,22 @@ enum RESERVED {
   TK_IDIV, TK_CONCAT, TK_DOTS, TK_EQ, TK_GE, TK_LE, TK_NE,
   TK_SHL, TK_SHR,
   TK_DBCOLON, TK_EOS,
-  TK_FLT, TK_INT, TK_NAME, TK_STRING
+  TK_FLT, TK_INT, TK_NAME, TK_STRING,
+  TK_TYPECHK
 };
 
 /* number of reserved words */
 #define NUM_RESERVED	(cast(int, TK_WHILE-FIRST_RESERVED+1))
+#ifdef LUA_TYPECHECK
+
+#define TYPE_CHECKING_MAX_PARM 16
+
+typedef struct TypeCheck{
+  int size;
+  int types[TYPE_CHECKING_MAX_PARM];
+} TypeCheck;
+
+#endif
 
 
 typedef union {
@@ -69,6 +80,9 @@ typedef struct LexState {
   struct Dyndata *dyd;  /* dynamic structures used by the parser */
   TString *source;  /* current source name */
   TString *envn;  /* environment variable name */
+#ifdef LUA_TYPECHECK
+  TypeCheck tc;
+#endif
 } LexState;
 
 

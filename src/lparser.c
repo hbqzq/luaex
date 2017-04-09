@@ -62,6 +62,16 @@ typedef struct BlockCnt {
 static void statement (LexState *ls);
 static void expr (LexState *ls, expdesc *v);
 
+#ifdef LUA_TYPECHECK
+/*
+** function for type-checking
+*/
+static void store_typecheck(LexState* ls, TString* returnType, TString** paramTypes, int nparam);
+static void clear_typecheck(LexState* ls);
+static int typecheckstat(LexState* ls);
+static void functypechk(LexState* ls);
+#endif
+
 
 /* semantic error */
 static l_noret semerror (LexState *ls, const char *msg) {
@@ -748,7 +758,25 @@ static void constructor (LexState *ls, expdesc *t) {
 
 /* }====================================================================== */
 
+#ifdef LUA_TYPECHECK
+static void functypechk(LexState* ls) {
+	if (ls->tc.size < 0) 
+		return;
 
+	FuncState *fs = ls->fs;
+	Proto *f = fs->f;
+	if (f->is_vararg || f->numparams != ls->tc.size) {
+		clear_typecheck(ls);
+		return;
+	}
+
+	f->tc = luaM_newvector(ls->L, ls->tc.size + 1, int);
+	f->sizetc = ls->tc.size;
+
+	for (int i = 0; i < f->sizetc + 1; i++) 
+		f->tc[i] = ls->tc.types[i];
+}
+#endif
 
 static void parlist (LexState *ls) {
   /* parlist -> [ param { ',' param } ] */
@@ -793,6 +821,9 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
   }
   parlist(ls);
   checknext(ls, ')');
+#ifdef LUA_TYPECHECK
+  functypechk(ls);
+#endif
   statlist(ls);
   new_fs.f->lastlinedefined = ls->linenumber;
   check_match(ls, TK_END, TK_FUNCTION, line);
@@ -1533,6 +1564,62 @@ static void retstat (LexState *ls) {
   testnext(ls, ';');  /* skip optional semicolon */
 }
 
+#ifdef LUA_TYPECHECK
+static void store_typecheck(LexState* ls, TString** paramTypes, int* nilables, int nparam) {
+	ls->tc.size = nparam;
+	for (int i = 0; i < nparam; i++) {
+		ls->tc.types[i] = luaT_setNillable(luaT_mapTypename(ls->L, getstr(paramTypes[i])), nilables[i]);
+	}
+}
+
+static void clear_typecheck(LexState* ls) {
+  ls->tc.size = -1;
+}
+
+static int typecheckstat(LexState* ls) {
+  clear_typecheck(ls);
+
+  TString* params[LUA_TC_PARM_LEN];
+  int nilables[LUA_TC_PARM_LEN];
+
+  params[0] = str_checkname(ls);
+  if (ls->t.token == '?') {
+	  nilables[0] = 1;
+	  luaX_next(ls);
+  }
+  else {
+	  nilables[0] = 0;
+  }
+
+  int nptypes = 0;
+  if (testnext(ls, '(')) {
+	  do {
+		switch (ls->t.token) {
+		  case TK_NAME: {  /* param -> NAME */
+			  TString* s = str_checkname(ls);
+			  params[nptypes + 1] = s;
+			  break;
+		  }
+		  default: luaX_syntaxerror(ls, "<name> or '...' expected");
+		}
+		if (ls->t.token == '?') {
+			nilables[nptypes + 1] = 1;
+			luaX_next(ls);
+		}
+		else {
+			nilables[nptypes + 1] = 0;
+		}
+		nptypes++;
+		if (ls->t.token == TK_NAME) luaX_next(ls);
+	  } while (testnext(ls, ',') && !testnext(ls, ')'));
+	testnext(ls, ')');
+	store_typecheck(ls, params, nilables, nptypes);
+  } else {
+	store_typecheck(ls, NULL, NULL, 0);
+  }
+  return 0;
+}
+#endif
 
 static void statement (LexState *ls) {
   int line = ls->linenumber;  /* may be needed for error messages */
@@ -1591,6 +1678,13 @@ static void statement (LexState *ls) {
       gotostat(ls, luaK_jump(ls->fs));
       break;
     }
+#ifdef LUA_TYPECHECK
+	case TK_TYPECHK: {/* stat -> function typechecking */
+      luaX_next(ls);  /* skip RETURN */
+	  typecheckstat(ls);
+	  break;
+	}
+#endif
     default: {  /* stat -> func | assignment */
       exprstat(ls);
       break;

@@ -443,6 +443,12 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         if (ls->current != '-') return '-';
         /* else is a comment */
         next(ls);
+#ifdef LUA_TYPECHECK
+		if (ls->current == '@') { /* function type-checking comment? */
+		  next(ls);
+		  return TK_TYPECHK;
+		}
+#endif
         if (ls->current == '[') {  /* long comment? */
           int sep = skip_sep(ls);
           luaZ_resetbuffer(ls->buff);  /* 'skip_sep' may dirty the buffer */
