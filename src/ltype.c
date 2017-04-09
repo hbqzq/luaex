@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #ifdef LUA_TYPECHECK
@@ -8,18 +7,7 @@
 #include "lstring.h"
 #include "lgc.h"
 
-static const char* typenames[8] = {
-	"nil",
-	"boolean",
-	"userdata",
-	"number",
-	"string",
-	"table",
-	"function",
-	"lightuserdata"
-};
-
-static const char* TYPENAME_ANY = "any";
+#define TYPENAME_ANY "any"
 
 const char* luaT_getTypename(lua_State* L, int id) {
 	id &= LUA_TYPE_MASK;
@@ -54,6 +42,7 @@ int luaT_mapTypename(lua_State* L, const char* name) {
 }
 
 int luaT_matchType(lua_State* L, int required, int got) {
+	if (required == 0) return 1;
 	int nilable = (required & LUA_TYPE_NILABLE) != 0;
 	required &= LUA_TYPE_MASK;
 	got &= LUA_TYPE_MASK;
@@ -82,6 +71,8 @@ void luaT_typeInit(lua_State* L) {
 	luaT_mapTypename(L, "function");
 	luaT_mapTypename(L, "lightuserdata");
 	luaT_mapTypename(L, "thread");
+
+	lmap_set(&g->tc_map, TYPENAME_ANY, 0);
 }
 
 void luaT_typeDeinit(lua_State* L) {
