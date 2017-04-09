@@ -775,6 +775,7 @@ static void functypechk(LexState* ls) {
 
 	for (int i = 0; i < f->sizetc + 1; i++) 
 		f->tc[i] = ls->tc.types[i];
+	clear_typecheck(ls);
 }
 #endif
 

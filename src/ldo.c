@@ -388,8 +388,23 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
     }
     L->oldpc = ci->previous->u.l.savedpc;  /* 'oldpc' for caller function */
   }
+
+  if (ttype(ci->func) == LUA_TLCL) {
+      Proto *p = clLvalue(ci->func)->p;
+	  if (p->sizetc > 0) {
+		  int idx = p->numparams + 1;
+		  int resTypeId = luaT_getTypeId(L, idx);
+		  if (!luaT_matchType(L, p->tc[0], resTypeId)) {
+			  const char* got = luaT_getTypename(L, resTypeId);
+			  const char* expected = luaT_getTypename(L, p->tc[0]);
+			  luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
+		  }
+	  }
+  }
+
   res = ci->func;  /* res == final position of 1st result */
   L->ci = ci->previous;  /* back to caller */
+  
   /* move results to proper place */
   return moveresults(L, firstResult, res, nres, wanted);
 }
