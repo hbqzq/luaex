@@ -73,7 +73,8 @@ typedef struct lua_State lua_State;
 
 #define LUA_NUMTAGS		9
 
-
+/* length of param list for type-checking */
+#define LUA_TC_PARM_LEN 16
 
 /* minimum Lua stack available to a C function */
 #define LUA_MINSTACK	20

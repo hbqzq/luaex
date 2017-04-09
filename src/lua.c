@@ -592,7 +592,7 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
-
+#include <stdio.h>
 int main (int argc, char **argv) {
   int status, result;
   lua_State *L = luaL_newstate();  /* create state */
@@ -607,6 +607,8 @@ int main (int argc, char **argv) {
   result = lua_toboolean(L, -1);  /* get result */
   report(L, status);
   lua_close(L);
+  char a;
+  scanf("%c", &a);
   return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 

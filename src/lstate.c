@@ -246,6 +246,9 @@ static void close_state (lua_State *L) {
   if (g->version)  /* closing a fully built state? */
     luai_userstateclose(L);
   luaM_freearray(L, G(L)->strt.hash, G(L)->strt.size);
+#ifdef LUA_TYPECHECK
+  luaT_typeDeinit(L);
+#endif
   freestack(L);
   lua_assert(gettotalbytes(g) == sizeof(LG));
   (*g->frealloc)(g->ud, fromstate(L), sizeof(LG), 0);  /* free main block */
@@ -328,6 +331,9 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->gcfinnum = 0;
   g->gcpause = LUAI_GCPAUSE;
   g->gcstepmul = LUAI_GCMUL;
+#ifdef LUA_TYPECHECK
+  luaT_typeInit(L);
+#endif
   for (i=0; i < LUA_NUMTAGS; i++) g->mt[i] = NULL;
   if (luaD_rawrunprotected(L, f_luaopen, NULL) != LUA_OK) {
     /* memory allocation error: free partial state */
