@@ -1,13 +1,11 @@
 #include <string.h>
 
-#ifdef LUA_TYPECHECK
-
 #include "lstate.h"
 #include "ltype.h"
 #include "lstring.h"
 #include "lgc.h"
 
-#define TYPENAME_ANY "any"
+#ifdef LUA_TYPECHECK
 
 const char* luaT_getTypename(lua_State* L, int id) {
 	id &= LUA_TYPE_MASK;
@@ -41,8 +39,8 @@ int luaT_mapTypename(lua_State* L, const char* name) {
 	return id;
 }
 
-int luaT_matchType(lua_State* L, int required, int got) {
-	if (required == 0) return 1;
+int luaT_matchType(int required, int got) {
+	if ((required & LUA_TYPE_MASK) == 0) return 1;
 	int nilable = (required & LUA_TYPE_NILABLE) != 0;
 	required &= LUA_TYPE_MASK;
 	got &= LUA_TYPE_MASK;
@@ -72,7 +70,8 @@ void luaT_typeInit(lua_State* L) {
 	luaT_mapTypename(L, "lightuserdata");
 	luaT_mapTypename(L, "thread");
 
-	lmap_set(&g->tc_map, TYPENAME_ANY, 0);
+	lmap_set(&g->tc_map, "any", LUA_TNIL); // aka nil
+	lmap_set(&g->tc_map, "boolean", LUA_TBOOLEAN); // aka bool
 }
 
 void luaT_typeDeinit(lua_State* L) {
@@ -84,5 +83,9 @@ void luaT_typeDeinit(lua_State* L) {
 	g->tc_size = 0;
 	g->tc_cap = 0;
 }
+#else /* LUA_TYPECHECK */
 
-#endif // LUA_TYPECHECK
+void luaT_no_warning() {
+}
+
+#endif /* LUA_TYPECHECK */

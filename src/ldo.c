@@ -378,6 +378,23 @@ static int moveresults (lua_State *L, const TValue *firstResult, StkId res,
 ** wanted multiple (variable number of) results.
 */
 int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
+#ifdef LUA_TYPECHECK
+	StkId func = ci->func;
+	if (ttype(func) == LUA_TLCL) {
+		Proto *p = clLvalue(func)->p;
+		if (p->sizetc > 0) {
+			int required_id = p->tc[0];
+			int got_id = ttnov(firstResult);
+			if (!luaT_matchType(required_id, got_id)) {
+				const char* got = luaT_getTypename(L, got_id);
+				const char* expected = luaT_getTypename(L, required_id);
+				luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
+				return 0;
+			}
+		}
+	}
+#endif /* LUA_TYPECHECK */
+
   StkId res;
   int wanted = ci->nresults;
   if (L->hookmask & (LUA_MASKRET | LUA_MASKLINE)) {
@@ -387,19 +404,6 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
       firstResult = restorestack(L, fr);
     }
     L->oldpc = ci->previous->u.l.savedpc;  /* 'oldpc' for caller function */
-  }
-
-  if (ttype(ci->func) == LUA_TLCL) {
-      Proto *p = clLvalue(ci->func)->p;
-	  if (p->sizetc > 0) {
-		  int idx = p->numparams + 1;
-		  int resTypeId = luaT_getTypeId(L, idx);
-		  if (!luaT_matchType(L, p->tc[0], resTypeId)) {
-			  const char* got = luaT_getTypename(L, resTypeId);
-			  const char* expected = luaT_getTypename(L, p->tc[0]);
-			  luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
-		  }
-	  }
   }
 
   res = ci->func;  /* res == final position of 1st result */
@@ -475,10 +479,11 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
 		  for (int i = 0; i < p->numparams; i++) {
 			  int argidx = i - nargs - 1;
 			  int argTypeId = luaT_getTypeId(L, argidx);
-			  if (p->tc[i + 1] <= 0) continue;
-			  if (!luaT_matchType(L, p->tc[i + 1], argTypeId)) {
+			  int required = p->tc[i + 1];
+			  if (required <= 0) continue;
+			  if (!luaT_matchType(required, argTypeId)) {
 				  const char* got = luaT_getTypename(L, argTypeId);
-				  const char* expected = luaT_getTypename(L, p->tc[i + 1]);
+				  const char* expected = luaT_getTypename(L, required);
 				  luaL_error(L, "invalid type of param[%d], <%s> expected, got <%s>", i, expected, got);
 			  }
 		  }
@@ -529,7 +534,7 @@ static void stackerror (lua_State *L) {
 void luaD_call (lua_State *L, StkId func, int nResults) {
   if (++L->nCcalls >= LUAI_MAXCCALLS)
     stackerror(L);
-  if (!luaD_precall(L, func, nResults))  /* is a Lua function? */
+  if (!luaD_precall(L, func, nResults)) /* is a Lua function? */
     luaV_execute(L);  /* call it */
   L->nCcalls--;
 }
