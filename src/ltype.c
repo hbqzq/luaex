@@ -1,11 +1,11 @@
 #include <string.h>
 
-#ifdef LUA_TYPECHECK
-
 #include "lstate.h"
 #include "ltype.h"
 #include "lstring.h"
 #include "lgc.h"
+
+#ifdef LUA_TYPECHECK
 
 #define TYPENAME_ANY "any"
 
@@ -41,7 +41,7 @@ int luaT_mapTypename(lua_State* L, const char* name) {
 	return id;
 }
 
-int luaT_matchType(lua_State* L, int required, int got) {
+int luaT_matchType(int required, int got) {
 	if (required == 0) return 1;
 	int nilable = (required & LUA_TYPE_NILABLE) != 0;
 	required &= LUA_TYPE_MASK;
@@ -84,5 +84,9 @@ void luaT_typeDeinit(lua_State* L) {
 	g->tc_size = 0;
 	g->tc_cap = 0;
 }
+#else /* LUA_TYPECHECK */
 
-#endif // LUA_TYPECHECK
+void luaT_no_warning() {
+}
+
+#endif /* LUA_TYPECHECK */

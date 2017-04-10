@@ -66,7 +66,7 @@ static void expr (LexState *ls, expdesc *v);
 /*
 ** function for type-checking
 */
-static void store_typecheck(LexState* ls, TString* returnType, TString** paramTypes, int nparam);
+static void store_typecheck(LexState* ls, TString** paramTypes, int* nilables, int nparam);
 static void clear_typecheck(LexState* ls);
 static int typecheckstat(LexState* ls);
 static void functypechk(LexState* ls);
