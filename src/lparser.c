@@ -66,7 +66,7 @@ static void expr (LexState *ls, expdesc *v);
 /*
 ** function for type-checking
 */
-static void store_typecheck(LexState* ls, TString** paramTypes, int* nilables, int nparam);
+static void store_typecheck(LexState* ls, const char** paramTypes, int* nilables, int nparam);
 static void clear_typecheck(LexState* ls);
 static int typecheckstat(LexState* ls);
 static void functypechk(LexState* ls);
@@ -1566,10 +1566,10 @@ static void retstat (LexState *ls) {
 }
 
 #ifdef LUA_TYPECHECK
-static void store_typecheck(LexState* ls, TString** paramTypes, int* nilables, int nparam) {
+static void store_typecheck(LexState* ls, const char** paramTypes, int* nilables, int nparam) {
 	ls->tc.size = nparam;
 	for (int i = 0; i < nparam; i++) {
-		ls->tc.types[i] = luaT_setNillable(luaT_mapTypename(ls->L, getstr(paramTypes[i])), nilables[i]);
+		ls->tc.types[i] = luaT_setNillable(luaT_mapTypename(ls->L, paramTypes[i]), nilables[i]);
 	}
 }
 
@@ -1578,12 +1578,26 @@ static void clear_typecheck(LexState* ls) {
 }
 
 static int typecheckstat(LexState* ls) {
+  static const char* function_name = "function";
+
   clear_typecheck(ls);
 
-  TString* params[LUA_TC_PARM_LEN];
+  const char* params[LUA_TC_PARM_LEN];
   int nilables[LUA_TC_PARM_LEN];
 
-  params[0] = str_checkname(ls);
+  switch (ls->t.token) {
+	case TK_NAME: {  /* param -> NAME */
+	  TString* s = str_checkname(ls);
+	  params[0] = getstr(s);
+	  break;
+	};
+	case TK_FUNCTION: {
+	  params[0] = function_name;
+	  luaX_next(ls);
+	  break;
+	};
+	default: luaX_syntaxerror(ls, "<name> or '...' expected");
+  }
   if (ls->t.token == '?') {
 	  nilables[0] = 1;
 	  luaX_next(ls);
@@ -1598,9 +1612,14 @@ static int typecheckstat(LexState* ls) {
 		switch (ls->t.token) {
 		  case TK_NAME: {  /* param -> NAME */
 			  TString* s = str_checkname(ls);
-			  params[nptypes + 1] = s;
+			  params[nptypes + 1] = getstr(s);
 			  break;
-		  }
+		  };
+		  case TK_FUNCTION: {
+			  params[nptypes + 1] = function_name;
+			  luaX_next(ls);
+			  break;
+		  };
 		  default: luaX_syntaxerror(ls, "<name> or '...' expected");
 		}
 		if (ls->t.token == '?') {

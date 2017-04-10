@@ -7,8 +7,6 @@
 
 #ifdef LUA_TYPECHECK
 
-#define TYPENAME_ANY "any"
-
 const char* luaT_getTypename(lua_State* L, int id) {
 	id &= LUA_TYPE_MASK;
 	global_State *g = L->l_G;
@@ -42,7 +40,7 @@ int luaT_mapTypename(lua_State* L, const char* name) {
 }
 
 int luaT_matchType(int required, int got) {
-	if (required == 0) return 1;
+	if ((required & LUA_TYPE_MASK) == 0) return 1;
 	int nilable = (required & LUA_TYPE_NILABLE) != 0;
 	required &= LUA_TYPE_MASK;
 	got &= LUA_TYPE_MASK;
@@ -72,7 +70,8 @@ void luaT_typeInit(lua_State* L) {
 	luaT_mapTypename(L, "lightuserdata");
 	luaT_mapTypename(L, "thread");
 
-	lmap_set(&g->tc_map, TYPENAME_ANY, 0);
+	lmap_set(&g->tc_map, "any", LUA_TNIL); // aka nil
+	lmap_set(&g->tc_map, "boolean", LUA_TBOOLEAN); // aka bool
 }
 
 void luaT_typeDeinit(lua_State* L) {

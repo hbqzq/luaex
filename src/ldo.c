@@ -389,6 +389,7 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
 				const char* got = luaT_getTypename(L, got_id);
 				const char* expected = luaT_getTypename(L, required_id);
 				luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
+				return 0;
 			}
 		}
 	}
