@@ -370,7 +370,7 @@ static int moveresults (lua_State *L, const TValue *firstResult, StkId res,
   L->top = res + wanted;  /* top points after the last result */
   return 1;
 }
-
+#include <stdio.h>
 
 /*
 ** Finishes a function call: calls hook if necessary, removes CallInfo,
@@ -383,8 +383,9 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
 	if (ttype(func) == LUA_TLCL) {
 		Proto *p = clLvalue(func)->p;
 		if (p->sizetc > 0) {
+			int pos = cast_int(firstResult - L->top);
 			int required_id = p->tc[0];
-			int got_id = ttnov(firstResult);
+			int got_id = luaT_getTypeId(L, pos);
 			if (!luaT_matchType(required_id, got_id)) {
 				const char* got = luaT_getTypename(L, got_id);
 				const char* expected = luaT_getTypename(L, required_id);
