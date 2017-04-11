@@ -152,7 +152,7 @@ typedef struct global_State {
   TString *tmname[TM_N];  /* array with tag-method names */
   struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */
   TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   lmap_int_t tc_map; /* typename map for type-checking */
   char **tc; /* typename array for type-checking */
   int tc_cap;

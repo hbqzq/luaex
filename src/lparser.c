@@ -62,7 +62,7 @@ typedef struct BlockCnt {
 static void statement (LexState *ls);
 static void expr (LexState *ls, expdesc *v);
 
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 /*
 ** function for type-checking
 */
@@ -758,7 +758,7 @@ static void constructor (LexState *ls, expdesc *t) {
 
 /* }====================================================================== */
 
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 static void functypechk(LexState* ls) {
 	if (ls->tc.size < 0) 
 		return;
@@ -822,7 +822,7 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
   }
   parlist(ls);
   checknext(ls, ')');
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   functypechk(ls);
 #endif
   statlist(ls);
@@ -1565,7 +1565,7 @@ static void retstat (LexState *ls) {
   testnext(ls, ';');  /* skip optional semicolon */
 }
 
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 static void store_typecheck(LexState* ls, const char** paramTypes, int* nilables, int nparam) {
 	ls->tc.size = nparam;
 	for (int i = 0; i <= nparam; i++) {
@@ -1701,7 +1701,7 @@ static void statement (LexState *ls) {
       gotostat(ls, luaK_jump(ls->fs));
       break;
     }
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 	case TK_TYPECHK: {/* stat -> function typechecking */
       luaX_next(ls);  /* skip RETURN */
 	  typecheckstat(ls);

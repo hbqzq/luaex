@@ -33,7 +33,7 @@
 #include "lvm.h"
 #include "lzio.h"
 
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 #include "lauxlib.h"
 #include "ltype.h"
 #endif
@@ -378,7 +378,7 @@ static int moveresults (lua_State *L, const TValue *firstResult, StkId res,
 ** wanted multiple (variable number of) results.
 */
 int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 	StkId func = ci->func;
 	if (ttype(func) == LUA_TLCL) {
 		Proto *p = clLvalue(func)->p;
@@ -393,7 +393,7 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
 			}
 		}
 	}
-#endif /* LUA_TYPECHECK */
+#endif /* LUAEX_TYPECHECK */
 
   StkId res;
   int wanted = ci->nresults;
@@ -473,7 +473,7 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
           setnilvalue(L->top++);  /* complete missing arguments */
         base = func + 1;
       }
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 	  if (!p->is_vararg && p->tc && p->sizetc > 0) {
 		  int nargs = cast_int(L->top - base - 1);
 		  for (int i = 0; i < p->numparams; i++) {

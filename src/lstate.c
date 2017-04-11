@@ -246,7 +246,7 @@ static void close_state (lua_State *L) {
   if (g->version)  /* closing a fully built state? */
     luai_userstateclose(L);
   luaM_freearray(L, G(L)->strt.hash, G(L)->strt.size);
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   luaT_typeDeinit(L);
 #endif
   freestack(L);
@@ -331,7 +331,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->gcfinnum = 0;
   g->gcpause = LUAI_GCPAUSE;
   g->gcstepmul = LUAI_GCMUL;
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   luaT_typeInit(L);
 #endif
   for (i=0; i < LUA_NUMTAGS; i++) g->mt[i] = NULL;
