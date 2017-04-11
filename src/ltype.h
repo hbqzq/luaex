@@ -1,7 +1,7 @@
 #ifndef ltype_h
 #define ltype_h
 
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 
 #include "ltable.h"
 #include "lobject.h"
@@ -23,6 +23,6 @@ int luaT_getTypeId(lua_State* L, int idx);
 void luaT_typeInit(lua_State* L);
 void luaT_typeDeinit(lua_State* L);
 
-#endif /* LUA_TYPECHECK */
+#endif /* LUAEX_TYPECHECK */
 
 #endif /* ltype_h */

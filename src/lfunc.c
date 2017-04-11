@@ -118,7 +118,7 @@ Proto *luaF_newproto (lua_State *L) {
   f->linedefined = 0;
   f->lastlinedefined = 0;
   f->source = NULL;
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   f->tc = NULL;
   f->sizetc = 0;
 #endif
@@ -133,7 +133,7 @@ void luaF_freeproto (lua_State *L, Proto *f) {
   luaM_freearray(L, f->lineinfo, f->sizelineinfo);
   luaM_freearray(L, f->locvars, f->sizelocvars);
   luaM_freearray(L, f->upvalues, f->sizeupvalues);
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   if (f->tc && f->sizetc >= 0)
 	luaM_freearray(L, f->tc, f->sizetc + 1);
 #endif

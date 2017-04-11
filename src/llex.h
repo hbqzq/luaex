@@ -39,7 +39,7 @@ enum RESERVED {
 
 /* number of reserved words */
 #define NUM_RESERVED	(cast(int, TK_WHILE-FIRST_RESERVED+1))
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 
 #define TYPE_CHECKING_MAX_PARM 16
 
@@ -80,7 +80,7 @@ typedef struct LexState {
   struct Dyndata *dyd;  /* dynamic structures used by the parser */
   TString *source;  /* current source name */
   TString *envn;  /* environment variable name */
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   TypeCheck tc;
 #endif
 } LexState;

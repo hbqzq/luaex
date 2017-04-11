@@ -5,7 +5,7 @@
 #include "lstring.h"
 #include "lgc.h"
 
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
 
 const char* luaT_getTypename(lua_State* L, int id) {
 	id &= LUA_TYPE_MASK;
@@ -83,9 +83,9 @@ void luaT_typeDeinit(lua_State* L) {
 	g->tc_size = 0;
 	g->tc_cap = 0;
 }
-#else /* LUA_TYPECHECK */
+#else /* LUAEX_TYPECHECK */
 
 void luaT_no_warning() {
 }
 
-#endif /* LUA_TYPECHECK */
+#endif /* LUAEX_TYPECHECK */

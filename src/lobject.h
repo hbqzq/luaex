@@ -423,7 +423,7 @@ typedef struct Proto {
   int sizelocvars;
   int linedefined;  /* debug information  */
   int lastlinedefined;  /* debug information  */
-#ifdef LUA_TYPECHECK
+#ifdef LUAEX_TYPECHECK
   int sizetc; /* flag for type checking */
   int* tc;
 #endif
