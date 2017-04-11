@@ -370,7 +370,7 @@ static int moveresults (lua_State *L, const TValue *firstResult, StkId res,
   L->top = res + wanted;  /* top points after the last result */
   return 1;
 }
-#include <stdio.h>
+
 
 /*
 ** Finishes a function call: calls hook if necessary, removes CallInfo,
