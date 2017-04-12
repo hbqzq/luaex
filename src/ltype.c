@@ -4,8 +4,15 @@
 #include "ltype.h"
 #include "lstring.h"
 #include "lgc.h"
+#include "lauxlib.h"
 
 #ifdef LUAEX_TYPECHECK
+
+static void luaT_error(lua_State* L, int required_id, int got_id) {
+	const char* got = got_id < 0 ? "unknown" : luaT_getTypename(L, got_id);
+	const char* expected = luaT_getTypename(L, required_id);
+	luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
+}
 
 const char* luaT_getTypename(lua_State* L, int id) {
 	id &= LUA_TYPE_MASK;
@@ -39,18 +46,26 @@ int luaT_mapTypename(lua_State* L, const char* name) {
 	return id;
 }
 
-int luaT_matchType(int required, int got) {
-	if ((required & LUA_TYPE_MASK) == 0) return 1;
-	int nilable = (required & LUA_TYPE_NILABLE) != 0;
-	required &= LUA_TYPE_MASK;
-	got &= LUA_TYPE_MASK;
-	if (nilable && got == 0) return 1;
-	if (required == got) return 1;
-	return 0;
-}
+int luaT_matchType(lua_State* L, int required, int idx) {
+	int nilable;
+	int got;
 
-int luaT_getTypeId(lua_State* L, int idx) {
-	return lua_type(L, idx);
+	if ((required & LUA_TYPE_MASK) == 0) return 1; //any
+
+	nilable = (required & LUA_TYPE_NILABLE) != 0;
+	if (lua_isnil(L, idx)) {
+		if (nilable) return 1;
+		else return 0;
+	}
+
+	required &= LUA_TYPE_MASK;
+	got = lua_type(L, idx);
+
+	/* Custom type-matching codes here */
+
+	if (required == got) return 1;
+	luaT_error(L, required, got);
+	return 0;
 }
 
 void luaT_typeInit(lua_State* L) {
@@ -76,7 +91,7 @@ void luaT_typeInit(lua_State* L) {
 
 void luaT_typeDeinit(lua_State* L) {
 	global_State* g = L->l_G;
-	for (int i = 0; i < g->tc_size; i++) 
+	for (int i = 0; i < g->tc_size; i++)
 		luaM_free(L, g->tc[i]);
 	luaM_freearray(L, g->tc, g->tc_cap);
 	lmap_deinit(&g->tc_map);

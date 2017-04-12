@@ -383,13 +383,9 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
 	if (ttype(func) == LUA_TLCL) {
 		Proto *p = clLvalue(func)->p;
 		if (p->sizetc > 0) {
-			int pos = cast_int(firstResult - L->top);
+			int idx = cast_int(firstResult - L->top);
 			int required_id = p->tc[0];
-			int got_id = luaT_getTypeId(L, pos);
-			if (!luaT_matchType(required_id, got_id)) {
-				const char* got = luaT_getTypename(L, got_id);
-				const char* expected = luaT_getTypename(L, required_id);
-				luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
+			if (!luaT_matchType(L, required_id, idx)) {
 				return 0;
 			}
 		}
@@ -479,13 +475,10 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
 		  int nargs = cast_int(L->top - base - 1);
 		  for (int i = 0; i < p->numparams; i++) {
 			  int argidx = i - nargs - 1;
-			  int argTypeId = luaT_getTypeId(L, argidx);
 			  int required = p->tc[i + 1];
 			  if (required <= 0) continue;
-			  if (!luaT_matchType(required, argTypeId)) {
-				  const char* got = luaT_getTypename(L, argTypeId);
-				  const char* expected = luaT_getTypename(L, required);
-				  luaL_error(L, "invalid type of param[%d], <%s> expected, got <%s>", i, expected, got);
+			  if (!luaT_matchType(L, required, argidx)) {
+				  return 0;
 			  }
 		  }
 	  }
