@@ -13,7 +13,7 @@
 const char* luaT_getTypename(lua_State* L, int id);
 int luaT_mapTypename(lua_State* L, const char* name);
 
-int luaT_matchType(lua_State* L, int required, int idx);
+int luaT_matchType(lua_State* L, int required, int idx, int parmidx);
 
 int inline luaT_setNillable(int id, int nilable) { return id | ((nilable != 0) * LUA_TYPE_NILABLE); }
 int inline luaT_isNillable(int id) { return (id & LUA_TYPE_NILABLE) != 0; }
