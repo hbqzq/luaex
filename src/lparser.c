@@ -26,6 +26,7 @@
 #include "lstate.h"
 #include "lstring.h"
 #include "ltable.h"
+#include "lauxlib.h"
 
 
 
@@ -760,15 +761,29 @@ static void constructor (LexState *ls, expdesc *t) {
 
 #ifdef LUAEX_TYPECHECK
 static void functypechk(LexState* ls) {
+  FuncState* fs;
+  Proto* f;
+
 	if (ls->tc.size < 0) 
 		return;
 
-	FuncState *fs = ls->fs;
-	Proto *f = fs->f;
-	if (f->is_vararg || f->numparams != ls->tc.size) {
+  if (ls->tc.line > ls->linenumber || !luaS_eqlngstr(ls->tc.source, ls->source)) {
+    return;
+  }
+
+	fs = ls->fs;
+	f = fs->f;
+	if (f->is_vararg) { 
+		luaL_error(ls->L, "%s:%d: type-checking for va_args is not supported", getstr(f->source), f->linedefined);
 		clear_typecheck(ls);
 		return;
 	}
+
+  if (f->numparams != ls->tc.size) {
+		luaL_error(ls->L, "%s:%d: number of params not matched, %d expected in type-checking, got %d", getstr(f->source), f->linedefined, ls->tc.size, f->numparams);
+		clear_typecheck(ls);
+		return;
+  }
 
 	f->tc = luaM_newvector(ls->L, ls->tc.size + 1, int);
 	f->sizetc = ls->tc.size;
@@ -1567,6 +1582,8 @@ static void retstat (LexState *ls) {
 
 #ifdef LUAEX_TYPECHECK
 static void store_typecheck(LexState* ls, const char** paramTypes, int* nilables, int nparam) {
+  ls->tc.line = ls->linenumber;
+  ls->tc.source = ls->source;
 	ls->tc.size = nparam;
 	for (int i = 0; i <= nparam; i++) {
 		ls->tc.types[i] = luaT_setNillable(luaT_mapTypename(ls->L, paramTypes[i]), nilables[i]);
@@ -1574,6 +1591,8 @@ static void store_typecheck(LexState* ls, const char** paramTypes, int* nilables
 }
 
 static void clear_typecheck(LexState* ls) {
+  ls->tc.source = NULL;
+  ls->tc.line = -1;
   ls->tc.size = -1;
 }
 
@@ -1744,6 +1763,11 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
                        Dyndata *dyd, const char *name, int firstchar) {
   LexState lexstate;
   FuncState funcstate;
+
+#ifdef LUAEX_TYPECHECK
+  clear_typecheck(&lexstate);
+#endif
+
   LClosure *cl = luaF_newLclosure(L, 1);  /* create main closure */
   setclLvalue(L, L->top, cl);  /* anchor it (to avoid being collected) */
   luaD_inctop(L);

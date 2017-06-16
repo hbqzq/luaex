@@ -44,7 +44,9 @@ enum RESERVED {
 #define TYPE_CHECKING_MAX_PARM 16
 
 typedef struct TypeCheck{
+  TString* source;
   int size;
+  int line;
   int types[TYPE_CHECKING_MAX_PARM];
 } TypeCheck;
 

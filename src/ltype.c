@@ -8,13 +8,13 @@
 
 #ifdef LUAEX_TYPECHECK
 
-static void luaT_error(lua_State* L, int required_id, int got_id, int parmidx) {
+static void luaT_error(lua_State* L, Proto* f, int required_id, int got_id, int parmidx) {
 	const char* got = got_id < 0 ? "unknown" : luaT_getTypename(L, got_id);
 	const char* expected = luaT_getTypename(L, required_id);
 	if (parmidx > 0)
-		luaL_error(L, "invalid type of param[%d], <%s> expected, got <%s>", parmidx, expected, got);
+		luaL_error(L, "%s:%d: invalid type of param[%d], <%s> expected, got <%s>", getstr(f->source), f->linedefined, parmidx, expected, got);
 	else
-		luaL_error(L, "invalid type of return value, <%s> expected, got <%s>", expected, got);
+		luaL_error(L, "%s:%d: invalid type of return value, <%s> expected, got <%s>", getstr(f->source), f->linedefined, expected, got);
 }
 
 const char* luaT_getTypename(lua_State* L, int id) {
@@ -49,7 +49,9 @@ int luaT_mapTypename(lua_State* L, const char* name) {
 	return id;
 }
 
-int luaT_matchType(lua_State* L, int required, int idx, int parmidx) {
+#include <stdio.h>
+
+int luaT_matchType(lua_State* L, Proto* f, int required, int idx, int parmidx) {
 	int nilable;
 	int got;
 
@@ -58,7 +60,12 @@ int luaT_matchType(lua_State* L, int required, int idx, int parmidx) {
 	nilable = (required & LUA_TYPE_NILABLE) != 0;
 	if (lua_isnil(L, idx)) {
 		if (nilable) return 1;
-		else return 0;
+
+		required &= LUA_TYPE_MASK;
+		got = lua_type(L, idx);
+		luaT_error(L, f, required, got, parmidx);
+		
+		return 0;
 	}
 
 	required &= LUA_TYPE_MASK;
@@ -67,7 +74,7 @@ int luaT_matchType(lua_State* L, int required, int idx, int parmidx) {
 	/* Custom type-matching codes here */
 
 	if (required == got) return 1;
-	luaT_error(L, required, got, parmidx);
+	luaT_error(L, f, required, got, parmidx);
 	return 0;
 }
 

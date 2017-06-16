@@ -385,7 +385,7 @@ int luaD_poscall (lua_State *L, CallInfo *ci, StkId firstResult, int nres) {
 		if (p->sizetc > 0) {
 			int idx = cast_int(firstResult - L->top);
 			int required_id = p->tc[0];
-			if (!luaT_matchType(L, required_id, idx, 0)) {
+			if (!luaT_matchType(L, p, required_id, idx, 0)) {
 				return 0;
 			}
 		}
@@ -477,7 +477,7 @@ int luaD_precall (lua_State *L, StkId func, int nresults) {
 			  int argidx = i - nargs - 1;
 			  int required = p->tc[i + 1];
 			  if (required <= 0) continue;
-			  if (!luaT_matchType(L, required, argidx, i + 1)) {
+			  if (!luaT_matchType(L, p, required, argidx, i + 1)) {
 				  return 0;
 			  }
 		  }
